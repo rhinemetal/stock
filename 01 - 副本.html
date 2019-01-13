@@ -1,0 +1,207 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<title></title>
+<script src="http://img.hexun.com/zl/tool/jquery-1.4.2.min.js"></script>
+
+<style type="text/css">
+*{margin:0;padding-top:10px;padding-left:20px;}
+body{background:#E9E9E9;background:#fff;}
+</style>
+</head>
+
+<body>
+
+<canvas id="myCanvas"></canvas>
+<script type="text/javascript">
+	var stockCode = "szse000922";
+
+	var bg = document.getElementById('myCanvas');
+	bg.width = "525";
+	bg.height = "410";
+	var topPadding = 20, leftPadding = 32;
+
+
+	//绘制背景网格
+	var grid = bg.getContext('2d');
+	grid.translate(0.5,0.5);
+	grid.lineWidth = 1;
+	grid.fillStyle="#F0F7FC";//背景.灰
+	grid.fillRect(leftPadding,topPadding,392,189);//背景
+	grid.strokeStyle="#D9E6EF";//背景外边框
+	grid.strokeRect(leftPadding,topPadding,392,189);//背景外边框.灰
+	grid.stroke();
+
+
+	//绘制背景网格.垂直线
+	for (i = 1; i < 8; i++){
+		grid.beginPath();
+		grid.moveTo(49*i+leftPadding,0+topPadding);
+		grid.lineTo(49*i+leftPadding,189+topPadding);
+		grid.stroke();
+	}
+
+	//绘制背景网格.水平线
+	grid.translate(0.5,0.5);
+	for (i = 1; i < 8; i++){
+		grid.beginPath();
+		grid.moveTo(0+leftPadding,23.625*i+topPadding);
+		grid.strokeStyle = i==4?"#67B4E7":"#D9E6EF";
+		grid.lineTo(392+leftPadding,23.625*i+topPadding);
+		grid.stroke();
+	}
+	var d = [[32,114],[132,134],[162,144],[192,74],[210,90],[230,114],[250,160],[270,50],[300,20],[320,114]];
+		grid.beginPath();
+		grid.lineWidth = 1;
+		grid.strokeStyle="#1B6FA4";
+		grid.moveTo(32,114);
+for (i = 0; i < d.length; i++){
+		grid.lineTo(d[i][0],d[i][1]);
+}
+		grid.lineTo(424,d[9][1]);
+		grid.strokeStyle = "green";
+		grid.lineTo(424,210);
+		grid.lineTo(32,210);
+		grid.lineTo(32,114);
+		var lineGradient = grid.createLinearGradient (50, 0, 50, 200);
+		lineGradient.addColorStop(0, 'rgba(175, 219, 252, 1)');
+		lineGradient.addColorStop(1, 'rgba(240, 247, 252, 1)');   
+		grid.fillStyle = lineGradient;
+		grid.fill();
+		grid.stroke();
+
+/*
+var lineGradient = ctx.createLinearGradient (50, 0, 50, 200);
+lineGradient.addColorStop(0, 'rgba(255, 0, 0, 1)');
+lineGradient.addColorStop(1, 'rgba(255, 255, 0, 1)');   
+ctx.fillStyle = lineGradient;
+ctx.fillRect(0, 0, 300, 300);
+*/
+
+	ajax("http://webstock.quote.hermes.hexun.com/a/quotelist?code="+stockCode+"&column=code,name,price,lastClose,High,low,open",function(data){
+
+		grid.font = "11px 宋体";
+		grid.fillStyle = "#82A2C4";
+
+		var Price = data.Data[0][0][2],
+		open = data.Data[0][0][6],
+		high = data.Data[0][0][4],
+		low = data.Data[0][0][5],
+		lastClose = data.Data[0][0][3],
+		gridPrice;
+		if (Price < lastClose){
+			gridPrice = parseFloat(toDecimal2(lastClose-low));
+		}
+		if (Price > lastClose){
+			gridPrice = parseFloat(toDecimal2(high-lastClose));
+		}
+
+	//绘制左侧价格
+		grid.fillText(toDecimal2((gridPrice+lastClose)/100), 0, 26); //最高
+		grid.fillText(toDecimal2((gridPrice*.75+lastClose)/100), 0, 49); //75%
+		grid.fillText(toDecimal2((gridPrice*.5+lastClose)/100), 0, 72); //50%
+		grid.fillText(toDecimal2((gridPrice/4+lastClose)/100), 0, 95); //25%
+		grid.fillText(toDecimal2(lastClose/100), 0, 118); //0%
+		grid.fillText(toDecimal2((lastClose-gridPrice/4)/100), 0, 141); //-25%
+		grid.fillText(toDecimal2((lastClose-gridPrice*.5)/100), 0, 164); //-50%
+		grid.fillText(toDecimal2((lastClose-gridPrice*.75)/100), 0, 187); //-75%
+		grid.fillText(toDecimal2((lastClose-gridPrice)/100), 0, 210); //最低
+		
+
+	//绘制右侧百分比
+		grid.fillStyle = "#D91A2A";
+		grid.fillText("+"+toDecimal2(gridPrice/lastClose*100)+"%", 434, 26);
+		grid.fillText("+"+toDecimal2(gridPrice*.75/lastClose*100)+"%", 434, 49);
+		grid.fillText("+"+toDecimal2(gridPrice/2/lastClose*100)+"%", 434, 72);
+		grid.fillText("+"+toDecimal2(gridPrice/4/lastClose*100)+"%", 434, 95);
+		grid.fillStyle = "#82A2C4";
+		grid.fillText("0.00"+"%", 434, 118);
+		grid.fillStyle = "#17A63A";
+		grid.fillText("-"+toDecimal2(gridPrice/4/lastClose*100)+"%", 434, 141);
+		grid.fillText("-"+toDecimal2(gridPrice/2/lastClose*100)+"%", 434, 164);
+		grid.fillText("-"+toDecimal2(gridPrice*.75/lastClose*100)+"%", 434, 187);
+		grid.fillText("-"+toDecimal2(gridPrice/lastClose*100)+"%", 434, 210);
+
+		//绘制底部开收盘时间
+		grid.fillStyle = "#82A2C4";
+		grid.fillText("9:30", 22, 227);
+		grid.fillText("10:30", 116, 227);
+		grid.fillText("11:30/13:00", 196, 227);
+		grid.fillText("14:00", 312, 227);
+		grid.fillText("15:00", 408, 227);
+
+		grid.font = "18px Arial";
+		if (Price > lastClose){
+			grid.fillStyle = "red";
+		}else if(Price < lastClose) {
+			grid.fillStyle = "green";
+		}else {
+			grid.fillStyle = "black";
+		}
+		grid.fillText(stockCode.replace(/[a-zA-Z]/g,""), 200, 15);
+
+	});
+
+
+
+
+//http://webstock.quote.hermes.hexun.com/gb/a/quotelist?code=szse001896&column=code,name,price,updownrate,priceweight&callback=jsonp1477558952930
+//http://webstock.quote.hermes.hexun.com/gb/a/minute?code=szse300128&start=20161031093000&number=240
+//http://webstock.quote.hermes.hexun.com/gb/a/quotelist?code=szse300128&column=code,name,price,lastClose,High,low&callback=jsonp1477889934630
+
+function ajax(url,callback){
+		var url = (url.indexOf('?') != -1) ? (url + '&') : (url + '?');
+		var time = new Date().getTime();
+		var name = 'hx_' + time;
+		url += 'callback=' + name  ;
+		window[name] = callback;		
+		var road = document.createElement('script');
+		road.type = 'text/javascript';
+		road.charset = "utf-8";
+		road.src = url;
+		document.getElementsByTagName('head')[0].appendChild(road);
+		if (road.readyState) {
+			road.onreadystatechange = function () {
+				if (road.readyState == 'loaded' || road.readyState == 'complete') {
+					road.onreadystatechange = null;
+					document.getElementsByTagName('head')[0].removeChild(road);
+					window[name] = 'undefined';
+					try {
+						delete window[name];
+					}
+					catch (e) { }
+					}
+				}
+		} else {
+			road.onload = function () {
+				document.getElementsByTagName('head')[0].removeChild(road);
+				window[name] = 'undefined';
+				try { delete window[name]; }
+				catch (e) { }
+			}
+		}
+}
+function toDecimal2(x) {  
+	var f = parseFloat(x);
+	if (isNaN(f)){
+		return false;
+	}  
+	var f = Math.round(x*100)/100;
+	var s = f.toString();
+	var rs = s.indexOf('.'); 
+	if (rs < 0){
+		rs = s.length;
+		s += '.';
+	}
+	while (s.length <= rs + 2){
+		s += '0';  
+	}
+	return s;
+}
+</script>
+
+
+
+</body>
+</html>

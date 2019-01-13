@@ -1,0 +1,176 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<script src="tool.js"></script>
+<script src="data.js"></script>
+<link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<ul>
+	<li><canvas id="myCanvas1" style=""></canvas></li>
+</ul>
+
+<script type="text/javascript">
+	//var stockCode = "sse600828";
+
+	var bg = document.getElementById('myCanvas1');
+	bg.width = "490";
+	bg.height = "240";
+	var topPadding = 20, leftPadding = 32;
+	var grid = bg.getContext('2d');
+
+var stockH5 = {
+	stockCode:"",
+
+	//绘制背景网格
+	drawSpace: function(c,d,n){
+		this.stockCode = c;
+		this.stockData = d;
+		this.data = n;
+		grid.clearRect(0, 0, 500,500);
+		grid.translate(0.5,0.5);
+		grid.lineWidth = 1;
+		grid.fillStyle="#F0F7FC";//背景.灰
+		grid.fillRect(leftPadding,topPadding,392,189);//背景
+		grid.strokeStyle="#D9E6EF";//背景外边框
+		grid.strokeRect(leftPadding,topPadding,392,189);//背景外边框.灰
+		grid.stroke();
+		stockH5.drawGrid();
+	},
+
+	//绘制背景网格.垂直线.水平线
+	drawGrid: function(){
+		for (i = 1; i < 8; i++){
+			grid.beginPath();
+			grid.moveTo(49*i+leftPadding,0+topPadding);
+			grid.lineTo(49*i+leftPadding,189+topPadding);
+			grid.stroke();
+		}
+		grid.translate(0.5,0.5);
+		for (i = 1; i < 8; i++){
+			grid.beginPath();
+			grid.moveTo(0+leftPadding,23.625*i+topPadding);
+			grid.strokeStyle = i==4?"#67B4E7":"#D9E6EF";
+			grid.lineTo(392+leftPadding,23.625*i+topPadding);
+			grid.stroke();
+		}
+		stockH5.drawGridPrice();
+	},
+
+
+	//绘制价格.百分比
+	drawGridPrice: function(){
+		var _this = this;
+			grid.font = "11px 宋体";
+			grid.fillStyle = "#82A2C4";
+			var Price = _this.data.Data1[0][0][2],
+			open = _this.data.Data1[0][0][6],
+			high = _this.data.Data1[0][0][4],
+			low = _this.data.Data1[0][0][5],
+			lastClose = _this.data.Data1[0][0][3],
+			gridPrice;
+			if (Price < lastClose){
+				gridPrice = parseFloat(tool.toDecimal2(lastClose-low));
+			}
+			if (Price > lastClose){
+				gridPrice = parseFloat(tool.toDecimal2(high-lastClose));
+			}
+			//绘制左侧价格
+			grid.fillText(tool.toDecimal2((gridPrice+lastClose)/100), 0, 26); //最高
+			grid.fillText(tool.toDecimal2((gridPrice*.75+lastClose)/100), 0, 49); //75%
+			grid.fillText(tool.toDecimal2((gridPrice*.5+lastClose)/100), 0, 72); //50%
+			grid.fillText(tool.toDecimal2((gridPrice/4+lastClose)/100), 0, 95); //25%
+			grid.fillText(tool.toDecimal2(lastClose/100), 0, 118); //0%
+			grid.fillText(tool.toDecimal2((lastClose-gridPrice/4)/100), 0, 141); //-25%
+			grid.fillText(tool.toDecimal2((lastClose-gridPrice*.5)/100), 0, 164); //-50%
+			grid.fillText(tool.toDecimal2((lastClose-gridPrice*.75)/100), 0, 187); //-75%
+			grid.fillText(tool.toDecimal2((lastClose-gridPrice)/100), 0, 210); //最低
+
+			//绘制右侧百分比
+			grid.fillStyle = "#D91A2A";
+			grid.fillText("+"+tool.toDecimal2(gridPrice/lastClose*100)+"%", 434, 26);
+			grid.fillText("+"+tool.toDecimal2(gridPrice*.75/lastClose*100)+"%", 434, 49);
+			grid.fillText("+"+tool.toDecimal2(gridPrice/2/lastClose*100)+"%", 434, 72);
+			grid.fillText("+"+tool.toDecimal2(gridPrice/4/lastClose*100)+"%", 434, 95);
+			grid.fillStyle = "#82A2C4";
+			grid.fillText("0.00"+"%", 434, 118);
+			grid.fillStyle = "#17A63A";
+			grid.fillText("-"+tool.toDecimal2(gridPrice/4/lastClose*100)+"%", 434, 141);
+			grid.fillText("-"+tool.toDecimal2(gridPrice/2/lastClose*100)+"%", 434, 164);
+			grid.fillText("-"+tool.toDecimal2(gridPrice*.75/lastClose*100)+"%", 434, 187);
+			grid.fillText("-"+tool.toDecimal2(gridPrice/lastClose*100)+"%", 434, 210);
+
+			//绘制底部开收盘时间
+			grid.fillStyle = "#82A2C4";
+			grid.fillText("9:30", 22, 227);
+			grid.fillText("10:30", 116, 227);
+			grid.fillText("11:30/13:00", 196, 227);
+			grid.fillText("14:00", 312, 227);
+			grid.fillText("15:00", 408, 227);
+
+			grid.font = "18px Arial";
+			if (Price > lastClose){
+				grid.fillStyle = "red";
+			}else if(Price < lastClose) {
+				grid.fillStyle = "green";
+			}else {
+				grid.fillStyle = "black";
+			}
+			grid.fillText(_this.stockCode.replace(/[a-zA-Z]/g,""), 200, 15);
+		stockH5.drawLine();
+	},
+
+	//绘制线* 长392 高189 高距1.63
+	drawLine: function(){
+		var openPrice,lastClose;
+		openPrice = this.data.Data2[0][0][0];
+		lastClose = this.data.Data2[0][0][1];
+
+		var pn = function(price,lastClose,ratio){
+			var p;
+			var n = price / lastClose;
+			n = n - 1;
+			p = 94.5 - 94.5*(n * ratio);
+			return p + topPadding
+		}
+		var ratio = tool.toDecimal2((10/((this.stockData.Data[2]-lastClose)/lastClose * 100)) * 10);
+		grid.beginPath();
+		grid.lineWidth = 2;
+		grid.strokeStyle="#1B6FA4";
+
+		grid.moveTo(32, pn(openPrice,this.stockData.Data[1],ratio));
+		for (i = 1; i < this.stockData.Data[0].length; i++){
+			grid.lineTo(32+i*1.64, pn(this.stockData.Data[0][i][1],this.stockData.Data[1],ratio));
+		}
+		grid.stroke();
+
+			
+			grid.beginPath();
+
+			grid.moveTo(32, pn(openPrice,this.stockData.Data[1],ratio));
+			for (i = 1; i < this.stockData.Data[0].length; i++){
+				grid.lineTo(32+i*1.64, pn(this.stockData.Data[0][i][1],this.stockData.Data[1],ratio));
+			}
+
+			grid.lineTo(32+this.stockData.Data[0].length*1.64,20+188);
+			grid.lineTo(32,20+188);
+			grid.lineTo(32,-187*((this.stockData.Data[0][0][1])/(this.stockData.Data[1])-1)*5+topPadding+94.5);
+			var lineGradient = grid.createLinearGradient (0, 0, 0, 209);
+			lineGradient.addColorStop(0, '#81C6F9');
+			lineGradient.addColorStop(1, '#fff');   
+			grid.fillStyle = lineGradient;
+			grid.fill();
+
+	}
+};
+
+stockH5.drawSpace("sse600050",stockData1,data1);
+</script>
+
+
+
+</body>
+</html>
